@@ -27,18 +27,19 @@ int main(int argc, char *argv[])
     NetworkInterface interface("wlan0");
     char fmac[18]="00:07:89:00:00:00";
 
-    radio[0].inner_pdu(makebeacon("wifiisflood!1",fmac));
-    radio[1].inner_pdu(makebeacon("networkhomework?2",fmac+1));
-    radio[2].inner_pdu(makebeacon("dangerouswifi3",fmac+2));
-    radio[3].inner_pdu(makebeacon("connectme4",fmac+3));
-    radio[4].inner_pdu(makebeacon("goodman5",fmac+4));
+    radio[0].inner_pdu(makebeacon("___1",fmac));
+    radio[1].inner_pdu(makebeacon("___2",fmac+1));
+    radio[2].inner_pdu(makebeacon("___3",fmac+2));
+    radio[3].inner_pdu(makebeacon("___4",fmac+3));
+    radio[4].inner_pdu(makebeacon("___5",fmac+4));
 
     while(true)
     {
 	for (int i = 0; i<5; i++)
 	{
 		sender.send(radio[i], interface);
+                usleep(50);
 	}
-	usleep(100000);
+	usleep(1000);
     }
 }

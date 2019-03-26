@@ -1,19 +1,57 @@
+#-*- coding: utf-8 -*-
 from scapy.all import *
+from time import sleep
+from multiprocessing import Process
+import json
+import sys
+import signal
 
-while(1):
-	br = "ff:ff:ff:ff:ff:ff"
+reload(sys)
+sys.setdefaultencoding('utf-8')
+
+json_data = open("ssid.json").read()
+crawl = json.loads(json_data)
+br = "ff:ff:ff:ff:ff:ff"
+
+class makebeacon:
 	dot11 = Dot11(addr1=br, addr2 = str(RandMAC()), addr3=str(RandMAC()))
-	dot22 = Dot11(addr1=br, addr2 = str(RandMAC()), addr3=str(RandMAC()))
-	dot33 = Dot11(addr1=br, addr2 = str(RandMAC()), addr3=str(RandMAC()))
+	beacon11 = Dot11Beacon(cap="ESS+privacy") #option : ESS or ESS+privacy
 
-	beacon1= Dot11Beacon(cap="ESS+privacy")
-	beacon2= Dot11Beacon(cap="ESS", timestamp=1)
-	beacon3= Dot11Beacon()
+	def __init__(self, count, interface):
+		self.count = count
+		self.interface = interface
 
-	essid1 = Dot11Elt(ID="SSID", info="floodingm")
-	essid2 = Dot11Elt(ID="SSID", info="pythonflo")
-	essid3 = Dot11Elt(ID="SSID", info="thirdmis")
+	def sendbeacon(self):
+		essid = Dot11Elt(ID="SSID", info=crawl["comment"][-1*self.count])
+		sendp(RadioTap()/self.dot11/self.beacon11/essid, iface=self.interface, loop=0,verbose=False)
 
-	sendp(RadioTap(), dot11, beacon1, essid1, iface="wlan0", loop=0)
-	sendp(RadioTap(), dot22, beacon2, essid2, iface="wlan0", loop=0)
-	sendp(RadioTap(), dot33, beacon3, essid3, iface="wlan0", loop=0)
+class Multibeacon(Process):
+
+	def __init__(self, beaconobj):
+		Process.__init__(self)
+		self.beaconobj = beaconobj
+
+	def run(self):
+		self.beaconobj.sendbeacon()
+		sleep(slptime)
+
+def handler(signum, f):
+	print(signum)
+	sys.exit()
+
+if __name__ == "__main__":
+	slptime = float(input("write sleep time: "))
+
+	beaconlist = []
+	p_list = []
+
+	for i in range(5):
+		beaconlist.append(makebeacon(i+1, crawl["interface"]))
+
+	print("sending packets")
+	while(1):
+		for i in range(len(beaconlist)):
+			p = Multibeacon(beaconlist[i])
+#			p_list.append(p)
+			p.start()
+
